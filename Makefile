@@ -22,7 +22,7 @@ TARGET_GOOS=$(word 1,$(TARGET_ARCH_SPACE))
 TARGET_GOARCH=$(word 2,$(TARGET_ARCH_SPACE))
 endif
 
-.PHONY: all deps update fmt test check doc dist
+.PHONY: all deps update fmt test check doc dist update-make
 
 all: $(PROJECT_NAME)
 
@@ -70,3 +70,8 @@ ifneq ($(TARGET_ARCH),)
 dist/$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
 	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags "-N -l"
 endif
+
+update-make:
+	@echo "Updating Makefile ..."
+	@curl -s "https://raw.githubusercontent.com/MagicalTux/make-go/master/Makefile" >Makefile.upd
+	@mv -f "Makefile.upd" "Makefile"
