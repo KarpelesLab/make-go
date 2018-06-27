@@ -55,19 +55,19 @@ doc:
 	$(GOPATH)/bin/godoc -v -http=:6060 -index -play
 
 dist:
-	@mkdir -p dist/$(GIT_TAG)
-	@make -s dist/$(GIT_TAG).tar.lzma
+	@mkdir -p dist/$(PROJECT_NAME)_$(GIT_TAG)
+	@make -s dist/$(PROJECT_NAME)_$(GIT_TAG).tar.lzma
 
-dist/$(GIT_TAG).tar.lzma: $(patsubst %,dist/$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
-	tar --lzma -cvf $@ -C dist/$(GIT_TAG) .
+dist/$(PROJECT_NAME)_$(GIT_TAG).tar.lzma: $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
+	tar --lzma -cvf $@ -C dist/$(PROJECT_NAME)_$(GIT_TAG) .
 
-dist/$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
+dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 	@echo "Building $(PROJECT_NAME) for $*"
-	@TARGET_ARCH="$*" make -s dist/$(GIT_TAG)/build_$(PROJECT_NAME).$*
-	@mv 'dist/$(GIT_TAG)/build_$(PROJECT_NAME).$*' 'dist/$(GIT_TAG)/$(PROJECT_NAME).$*'
+	@TARGET_ARCH="$*" make -s dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*
+	@mv 'dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*' 'dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).$*'
 
 ifneq ($(TARGET_ARCH),)
-dist/$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
+dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
 	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags "-N -l"
 endif
 
