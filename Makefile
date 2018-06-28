@@ -67,8 +67,8 @@ ifneq ($(AWS),)
 	@echo "Uploading $@ as $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma"
 	aws s3 cp --cache-control 'max-age=31536000' "$@" "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma"
 	@echo "Configuring dist repository"
-	echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch.txt"
-	echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma" | aws s3 cp --cache-control 'max-age=3600' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
+	echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch"
+	echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG)" | aws s3 cp --cache-control 'max-age=3600' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
 	@echo "Sending to production complete!"
 endif
 
