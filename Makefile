@@ -4,6 +4,8 @@ GO_TAG:=$(shell /bin/sh -c 'eval `go tool dist env`; echo "$${GOOS}_$${GOARCH}"'
 GIT_TAG:=$(shell git rev-parse --short HEAD)
 GOPATH:=$(shell go env GOPATH)
 SOURCES:=$(shell find . -name '*.go')
+DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
+AWS:=$(shell which 2>/dev/null aws)
 
 -include contrib/config.mak
 
@@ -58,11 +60,23 @@ dist:
 	@mkdir -p dist/$(PROJECT_NAME)_$(GIT_TAG)
 	@make -s dist/$(PROJECT_NAME)_$(GIT_TAG).tar.lzma
 
-dist/$(PROJECT_NAME)_$(GIT_TAG).tar.lzma: $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
-	tar --lzma -cvf $@ -C dist/$(PROJECT_NAME)_$(GIT_TAG) .
+dist/$(PROJECT_NAME)_$(GIT_TAG).tar.lzma: dist/$(PROJECT_NAME)_$(GIT_TAG) $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
+	@echo "Generating $@"
+	@tar --lzma -cf $@ -C dist/$(PROJECT_NAME)_$(GIT_TAG) .
+ifneq ($(AWS),)
+	@echo "Uploading $@ as $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma"
+	aws s3 cp --cache-control 'max-age=31536000' "$@" "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma"
+	@echo "Configuring dist repository"
+	echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch.txt"
+	echo "$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma" | aws s3 cp --cache-control 'max-age=3600' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
+	@echo "Sending to production complete!"
+endif
+
+dist/$(PROJECT_NAME)_$(GIT_TAG):
+	@mkdir "$@"
 
 dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
-	@echo "Building $(PROJECT_NAME) for $*"
+	@echo " * Building $(PROJECT_NAME) for $*"
 	@TARGET_ARCH="$*" make -s dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*
 	@mv 'dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*' 'dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).$*'
 
