@@ -30,7 +30,7 @@ all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(SOURCES)
 	$(GOPATH)/bin/goimports -w -l .
-	go build -v -gcflags "-N -l"
+	go build -v -gcflags="-N -l" -ldflags=all="-X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=DEV -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)"
 
 clean:
 	go clean
@@ -68,7 +68,7 @@ ifneq ($(AWS),)
 	aws s3 cp --cache-control 'max-age=31536000' "$@" "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma"
 	@echo "Configuring dist repository"
 	echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch.txt"
-	echo "$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma" | aws s3 cp --cache-control 'max-age=3600' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
+	echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.lzma" | aws s3 cp --cache-control 'max-age=3600' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
 	@echo "Sending to production complete!"
 endif
 
@@ -82,7 +82,7 @@ dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 
 ifneq ($(TARGET_ARCH),)
 dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
-	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags "-N -l"
+	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=PROD -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)"
 endif
 
 update-make:
