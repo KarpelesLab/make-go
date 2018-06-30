@@ -4,8 +4,11 @@ GO_TAG:=$(shell /bin/sh -c 'eval `go tool dist env`; echo "$${GOOS}_$${GOARCH}"'
 GIT_TAG:=$(shell git rev-parse --short HEAD)
 GOPATH:=$(shell go env GOPATH)
 SOURCES:=$(shell find . -name '*.go')
-DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
 AWS:=$(shell which 2>/dev/null aws)
+ifeq ($(DATE_TAG),)
+DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
+endif
+export DATE_TAG
 
 -include contrib/config.mak
 
