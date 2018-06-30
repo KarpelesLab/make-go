@@ -38,8 +38,23 @@ case "$MACHINE_ARCH" in
 	x86_64)
 		GOARCH=amd64
 		;;
+	amd64)
+		GOARCH=amd64
+		;;
+	i686)
+		GOARCH=386
+		;;
 	i386)
 		GOARCH=386
+		;;
+	powerpc)
+		GOARCH=ppc
+		;;
+	armv7l)
+		GOARCH=arm
+		;;
+	armv6l)
+		GOARCH=arm
 		;;
 	*)
 		echo >&2 "Error: unsupported architecture $MACHINE_ARCH"
