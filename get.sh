@@ -95,17 +95,19 @@ fi
 
 echo "Downloading version git $VERSION_GIT (dated $VERSION_DATE)..."
 
-curl -s -f "https://dist-go.tristandev.net/${PROJECT}/${VERSION_PREFIX}.tar.xz" | tar xJ "${PROJECT}.${MACHINE_FULL}"
-TAR_RES=$?
+if [ "$GOOS" = "windows" ]; then
+	OUTFILE="${PROJECT}.exe"
+else
+	OUTFILE="${PROJECT}"
+fi
 
-if [ $CURL_RES != 0 ]; then
+curl -s -f "https://dist-go.tristandev.net/${PROJECT}/${VERSION_PREFIX}/${PROJECT}_${MACHINE_FULL}.bz2" | bunzip2 >"${OUTFILE}~"
+BZ_RES=$?
+
+if [ $BZ_RES != 0 ]; then
 	echo >&2 "Error: Failed to obtain correct version for this project"
 	exit $CURL_RES
 fi
 
-if [ "$GOOS" = "windows" ]; then
-	mv -f "${PROJECT}.${MACHINE_FULL}" "${PROJECT}.exe"
-else
-	mv -f "${PROJECT}.${MACHINE_FULL}" "${PROJECT}"
-fi
-
+chmod +x "${OUTFILE}~"
+mv -f "${OUTFILE}~" "$OUTFILE"
