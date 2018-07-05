@@ -61,11 +61,9 @@ doc:
 
 dist:
 	@mkdir -p dist/$(PROJECT_NAME)_$(GIT_TAG)/upload
-	@make -s dist/$(PROJECT_NAME)_$(GIT_TAG).tar.xz
 	@make -s $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2,$(DIST_ARCHS))
 ifneq ($(AWS),)
 	@echo "Uploading ..."
-	@aws s3 cp --cache-control 'max-age=31536000' "dist/$(PROJECT_NAME)_$(GIT_TAG).tar.xz" "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).tar.xz"
 	@aws s3 cp --cache-control 'max-age=31536000' --recursive "dist/$(PROJECT_NAME)_$(GIT_TAG)/upload" "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG)/"
 	@echo "Configuring dist repository"
 	@echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch"
@@ -76,10 +74,6 @@ ifneq ($(NOTIFY),)
 	@curl -s "$(NOTIFY)"
 endif
 endif
-
-dist/$(PROJECT_NAME)_$(GIT_TAG).tar.xz: dist/$(PROJECT_NAME)_$(GIT_TAG) $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
-	@echo "Generating $@"
-	@tar -cJf $@ --owner=root:0 --group=root:0 -C dist/$(PROJECT_NAME)_$(GIT_TAG) $(patsubst %,$(PROJECT_NAME).%,$(DIST_ARCHS))
 
 dist/$(PROJECT_NAME)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2: dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%
 	@echo "Generating $@"
