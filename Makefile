@@ -71,6 +71,10 @@ ifneq ($(AWS),)
 	@echo "$(DIST_ARCHS)" | aws s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch"
 	@echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG)" | aws s3 cp --cache-control 'max-age=60' --content-type 'text/plain' - "s3://dist-go/$(PROJECT_NAME)/LATEST"
 	@echo "Sending to production complete!"
+ifneq ($(NOTIFY),)
+	@echo "Sending notify..."
+	@curl -s "$(NOTIFY)"
+endif
 endif
 
 dist/$(PROJECT_NAME)_$(GIT_TAG).tar.xz: dist/$(PROJECT_NAME)_$(GIT_TAG) $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%,$(DIST_ARCHS))
