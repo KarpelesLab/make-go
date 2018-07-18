@@ -10,6 +10,13 @@ DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
 endif
 export DATE_TAG
 
+# do we have a defined target arch?
+ifneq ($(TARGET_ARCH),)
+TARGET_ARCH_SPACE:=$(subst _, ,$(TARGET_ARCH))
+TARGET_GOOS=$(word 1,$(TARGET_ARCH_SPACE))
+TARGET_GOARCH=$(word 2,$(TARGET_ARCH_SPACE))
+endif
+
 -include contrib/config.mak
 
 # variables that should be set in contrib/config.mak
@@ -20,20 +27,13 @@ ifeq ($(PROJECT_NAME),)
 PROJECT_NAME:=$(shell basename `pwd`)
 endif
 
-# do we have a defined target arch?
-ifneq ($(TARGET_ARCH),)
-TARGET_ARCH_SPACE:=$(subst _, ,$(TARGET_ARCH))
-TARGET_GOOS=$(word 1,$(TARGET_ARCH_SPACE))
-TARGET_GOARCH=$(word 2,$(TARGET_ARCH_SPACE))
-endif
-
 .PHONY: all deps update fmt test check doc dist update-make
 
 all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(SOURCES)
 	$(GOPATH)/bin/goimports -w -l .
-	go build -v -gcflags="-N -l" -ldflags=all="-X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=DEV -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)"
+	go build -v -gcflags="-N -l" -ldflags=all="-X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=DEV -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)" $(GOFLAGS)
 
 clean:
 	go clean
@@ -89,7 +89,7 @@ dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 
 ifneq ($(TARGET_ARCH),)
 dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
-	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=PROD -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)"
+	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/magicaltux/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/magicaltux/goupd.MODE=PROD -X github.com/magicaltux/goupd.GIT_TAG=$(GIT_TAG) -X github.com/magicaltux/goupd.DATE_TAG=$(DATE_TAG)" $(GOFLAGS)
 endif
 
 update-make:
