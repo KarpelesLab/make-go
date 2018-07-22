@@ -27,7 +27,7 @@ ifeq ($(PROJECT_NAME),)
 PROJECT_NAME:=$(shell basename `pwd`)
 endif
 
-.PHONY: all deps update fmt test check doc dist update-make gen
+.PHONY: all deps update fmt test check doc dist update-make gen cov
 
 all: $(PROJECT_NAME)
 
@@ -53,6 +53,10 @@ test:
 
 gen:
 	go generate
+
+cov:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
 
 check:
 	@if [ ! -f $(GOPATH)/bin/gometalinter ]; then go get github.com/alecthomas/gometalinter; fi
