@@ -101,5 +101,5 @@ endif
 
 update-make:
 	@echo "Updating Makefile ..."
-	@curl -s "https://raw.githubusercontent.com/MagicalTux/make-go/master/Makefile" >Makefile.upd
+	@curl -s "https://raw.githubusercontent.com/TrisTech/make-go/master/Makefile" >Makefile.upd
 	@mv -f "Makefile.upd" "Makefile"
