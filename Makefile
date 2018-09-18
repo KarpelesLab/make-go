@@ -9,6 +9,7 @@ ifeq ($(DATE_TAG),)
 DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
 endif
 export DATE_TAG
+export GO111MODULE=on
 
 # do we have a defined target arch?
 ifneq ($(TARGET_ARCH),)
