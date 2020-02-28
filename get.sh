@@ -56,6 +56,9 @@ case "$MACHINE_ARCH" in
 	armv6l)
 		GOARCH=arm
 		;;
+	aarch64)
+		GOARCH=arm64
+		;;
 	*)
 		echo >&2 "Error: unsupported architecture $MACHINE_ARCH"
 		exit 1
