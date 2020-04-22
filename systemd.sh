@@ -17,7 +17,7 @@ if [ -f "$PROJECT" ]; then
 fi
 
 # we use our own get.sh script
-curl -s https://raw.githubusercontent.com/KarpelesLab/make-go/master/systemd.sh | /bin/sh -s "$PROJECT"
+curl -s https://raw.githubusercontent.com/KarpelesLab/make-go/master/get.sh | /bin/sh -s "$PROJECT"
 
 # let's install systemd script
 echo "Installing systemd script ${PROJECT}..."
