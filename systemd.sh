@@ -22,7 +22,7 @@ curl -s https://raw.githubusercontent.com/KarpelesLab/make-go/master/get.sh | /b
 # let's install systemd script
 echo "Installing systemd script ${PROJECT}..."
 
-echo >"/lib/systemd/system/${PROJECT}.service" <<EOF
+cat >"/lib/systemd/system/${PROJECT}.service" <<EOF
 [Unit]
 Description=${PROJECT} daemon
 After=network-online.target
