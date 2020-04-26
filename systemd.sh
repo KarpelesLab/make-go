@@ -35,6 +35,7 @@ Type=simple
 ExecStart=/usr/sbin/${PROJECT}
 Restart=on-failure
 RestartSec=5s
+$SVC_EXTRA
 
 [Install]
 WantedBy=multi-user.target
