@@ -33,7 +33,7 @@ StartLimitBurst=5
 [Service]
 Type=simple
 ExecStart=/usr/sbin/${PROJECT}
-Restart=on-failure
+Restart=always
 RestartSec=5s
 Environment=HOME=/root
 $SVC_EXTRA
