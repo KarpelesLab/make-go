@@ -42,5 +42,7 @@ $SVC_EXTRA
 WantedBy=multi-user.target
 EOF
 
-systemctl start "$PROJECT"
 systemctl enable "$PROJECT"
+if [ x"$SKIP_START" == x ]; then
+	systemctl start "$PROJECT"
+fi
