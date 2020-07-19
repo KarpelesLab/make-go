@@ -43,6 +43,6 @@ WantedBy=multi-user.target
 EOF
 
 systemctl enable "$PROJECT"
-if [ x"$SKIP_START" == x ]; then
+if [ x"$SKIP_START" = x ]; then
 	systemctl start "$PROJECT"
 fi
