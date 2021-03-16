@@ -27,8 +27,8 @@ cat >"/lib/systemd/system/${PROJECT}.service" <<EOF
 Description=${PROJECT} daemon
 After=network-online.target
 Wants=network-online.target systemd-networkd-wait-online.service
-StartLimitIntervalSec=500
-StartLimitBurst=5
+StartLimitIntervalSec=30
+StartLimitBurst=30
 
 [Service]
 Type=simple
