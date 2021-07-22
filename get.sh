@@ -32,7 +32,10 @@ case "$MACHINE_OS" in
 		;;
 esac
 
-MACHINE_ARCH=`uname -m`
+# let the user override that value
+if [ x"$MACHINE_ARCH" = x ]; then
+	MACHINE_ARCH=`uname -m`
+fi
 
 case "$MACHINE_ARCH" in
 	x86_64)
