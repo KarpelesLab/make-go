@@ -8,7 +8,7 @@ SOURCES:=$(shell find . -name '*.go')
 AWS:=$(shell which 2>/dev/null aws)
 S3_TARGET=s3://dist-go
 ifeq ($(DATE_TAG),)
-DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
+DATE_TAG:=$(shell TZ=UTC git show -s --format=%cd --date=format-local:%Y%m%d%H%M%S HEAD)
 endif
 export DATE_TAG
 export GO111MODULE=on
