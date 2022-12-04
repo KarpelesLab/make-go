@@ -36,7 +36,7 @@ all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(SOURCES)
 	$(GOPATH)/bin/goimports -w -l .
-	$(GOROOT)/bin/go build -v -gcflags="-N -l" -ldflags=all="-X github.com/KarpelesLab/goupd.MODE=DEV $(GOLDFLAGS)"
+	$(GOROOT)/bin/go build -v -tags "$(GO_TAGS)" -gcflags="-N -l" -ldflags=all="-X github.com/KarpelesLab/goupd.MODE=DEV $(GOLDFLAGS)"
 
 clean:
 	$(GOROOT)/bin/go clean
@@ -99,7 +99,7 @@ dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 
 ifneq ($(TARGET_ARCH),)
 dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
-	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.MODE=PROD $(GOLDFLAGS)"
+	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -tags "$(GO_TAGS)" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.MODE=PROD $(GOLDFLAGS)"
 endif
 
 update-make:
