@@ -88,13 +88,11 @@ endif
 	@echo "Sending to production complete!"
 endif
 ifneq ($(GO_RELEASE_KEY),)
-	zip -9r dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload
-	API_INFO=$(shell curl -s --data-urlencode "key=$(GO_RELEASE_KEY)" --data-urlencode "package=$(PROJECT_NAME)" --data-urlencode "channel=$(CHANNEL)" --data-urlencode "tag=$(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)" "${API_PREFIX}Cloud/Go:release")
-	API_PUT=$(shell echo '$(API_INFO)' | jq -r .data.PUT -)
-	API_COMP=$(shell echo '$(API_INFO)' | jq -r .data.Complete -)
+	zip -0r dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload
+	curl >dist/upload_info.json -s --data-urlencode "key=$(GO_RELEASE_KEY)" --data-urlencode "package=$(PROJECT_NAME)" --data-urlencode "channel=$(CHANNEL)" --data-urlencode "tag=$(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)" "${API_PREFIX}Cloud/Go:release"
 	sha256sum -b dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip
-	curl -T "dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip" -H "$CT_HEADER" "$API_PUT" >/dev/null
-	curl -s "${API_PREFIX}${API_COMP}"; echo
+	curl -T "dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip" -H "$(CT_HEADER)" "$$(cat dist/upload_info.json | jq -r .data.PUT -)" >/dev/null
+	curl -s "$(API_PREFIX)$$(cat dist/upload_info.json | jq -r .data.Complete -)"; echo
 endif
 ifneq ($(NOTIFY),)
 	@echo "Sending notify..."
