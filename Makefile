@@ -3,10 +3,14 @@
 GOROOT:=$(shell PATH="/pkg/main/dev-lang.go.dev/bin:$$PATH" go env GOROOT)
 GO_TAG:=$(shell /bin/sh -c 'eval `$(GOROOT)/bin/go tool dist env`; echo "$${GOOS}_$${GOARCH}"')
 GIT_TAG:=$(shell git rev-parse --short HEAD)
+CHANNEL:=$(shell git rev-parse --abbrev-ref HEAD)
 GOPATH:=$(shell $(GOROOT)/bin/go env GOPATH)
 SOURCES:=$(shell find . -name '*.go')
 AWS:=$(shell PATH="$$HOME/.local/bin:$$PATH" which 2>/dev/null aws)
 S3_TARGET=s3://dist-go
+DEFAULT_CHANNEL?=master
+API_PREFIX?=https://ws.atonline.com/_special/rest/
+CT_HEADER?=Content-Type: application/zip
 ifeq ($(DATE_TAG),)
 DATE_TAG:=$(shell TZ=UTC git show -s --format=%cd --date=format-local:%Y%m%d%H%M%S HEAD)
 endif
@@ -36,7 +40,7 @@ all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(SOURCES)
 	$(GOPATH)/bin/goimports -w -l .
-	$(GOROOT)/bin/go build -v -tags "$(GO_TAGS)" -gcflags="-N -l" -ldflags=all="-X github.com/KarpelesLab/goupd.MODE=DEV $(GOLDFLAGS)"
+	$(GOROOT)/bin/go build -v -tags "$(GO_TAGS)" -gcflags="-N -l" -ldflags=all="-X github.com/KarpelesLab/goupd.MODE=DEV -X github.com/KarpelesLab/goupd.CHANNEL=$(CHANNEL) $(GOLDFLAGS)"
 
 clean:
 	$(GOROOT)/bin/go clean
@@ -52,7 +56,7 @@ fmt:
 	$(GOPATH)/bin/goimports -w -l .
 
 test:
-	$(GOROOT)/bin/go test ./...
+	$(GOROOT)/bin/go test -v ./...
 
 gen:
 	$(GOROOT)/bin/go generate
@@ -70,19 +74,31 @@ doc:
 	$(GOPATH)/bin/godoc -v -http=:6060 -index -play
 
 dist:
-	@mkdir -p dist/$(PROJECT_NAME)_$(GIT_TAG)/upload
-	@make -s $(patsubst %,dist/$(PROJECT_NAME)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2,$(DIST_ARCHS))
+	@mkdir -p dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload
+	@make -s $(patsubst %,dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2,$(DIST_ARCHS))
 ifneq ($(AWS),)
 	@echo "Uploading ..."
-	@$(AWS) s3 cp --cache-control 'max-age=31536000' --recursive "dist/$(PROJECT_NAME)_$(GIT_TAG)/upload" "$(S3_TARGET)/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG)/"
+	@$(AWS) s3 cp --cache-control 'max-age=31536000' --recursive "dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload" "$(S3_TARGET)/$(PROJECT_NAME)/$(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)/"
 	@echo "Configuring dist repository"
-	@echo "$(DIST_ARCHS)" | $(AWS) s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "$(S3_TARGET)/$(PROJECT_NAME)/$(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG).arch"
-	@echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(DATE_TAG)_$(GIT_TAG)" | $(AWS) s3 cp --cache-control 'max-age=60' --content-type 'text/plain' - "$(S3_TARGET)/$(PROJECT_NAME)/LATEST"
+	@echo "$(DIST_ARCHS)" | $(AWS) s3 cp --cache-control 'max-age=31536000' --content-type 'text/plain' - "$(S3_TARGET)/$(PROJECT_NAME)/$(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG).arch"
+	@echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)" | $(AWS) s3 cp --cache-control 'max-age=60' --content-type 'text/plain' - "$(S3_TARGET)/$(PROJECT_NAME)/LATEST-$(CHANNEL)"
+ifeq ($(CHANNEL),$(DEFAULT_CHANNEL))
+	@echo "$(DATE_TAG) $(GIT_TAG) $(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)" | $(AWS) s3 cp --cache-control 'max-age=60' --content-type 'text/plain' - "$(S3_TARGET)/$(PROJECT_NAME)/LATEST"
+endif
 	@echo "Sending to production complete!"
+endif
+ifneq ($(GO_RELEASE_KEY),)
+	zip -9r dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload
+	API_INFO=$(shell curl -s --data-urlencode "key=$(GO_RELEASE_KEY)" --data-urlencode "package=$(PROJECT_NAME)" --data-urlencode "channel=$(CHANNEL)" --data-urlencode "tag=$(PROJECT_NAME)_$(CHANNEL)_$(DATE_TAG)_$(GIT_TAG)" "${API_PREFIX}Cloud/Go:release")
+	API_PUT=$(shell echo '$(API_INFO)' | jq -r .data.PUT -)
+	API_COMP=$(shell echo '$(API_INFO)' | jq -r .data.Complete -)
+	sha256sum -b dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip
+	curl -T "dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG).zip" -H "$CT_HEADER" "$API_PUT" >/dev/null
+	curl -s "${API_PREFIX}${API_COMP}"; echo
+endif
 ifneq ($(NOTIFY),)
 	@echo "Sending notify..."
 	@curl -s "$(NOTIFY)"
-endif
 endif
 
 dist/$(PROJECT_NAME)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2: dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%
@@ -99,7 +115,7 @@ dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 
 ifneq ($(TARGET_ARCH),)
 dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
-	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -tags "$(GO_TAGS)" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.MODE=PROD $(GOLDFLAGS)"
+	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -tags "$(GO_TAGS)" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.MODE=PROD -X github.com/KarpelesLab/goupd.CHANNEL=$(CHANNEL) $(GOLDFLAGS)"
 endif
 
 update-make:
