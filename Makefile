@@ -101,20 +101,20 @@ ifneq ($(NOTIFY),)
 	@curl -s "$(NOTIFY)"
 endif
 
-dist/$(PROJECT_NAME)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2: dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%
+dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/upload/$(PROJECT_NAME)_%.bz2: dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/$(PROJECT_NAME).%
 	@echo "Generating $@"
 	@bzip2 --stdout --compress --keep -9 "$<" >"$@"
 
-dist/$(PROJECT_NAME)_$(GIT_TAG):
+dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG):
 	@mkdir "$@"
 
-dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
-	@echo " * Building $(PROJECT_NAME) for $*"
-	@TARGET_ARCH="$*" make -s dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*
-	@mv 'dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$*' 'dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).$*'
+dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
+	@echo " * Building $(PROJECT_NAME)[$(CHANNEL)] for $*"
+	@TARGET_ARCH="$*" make -s dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/build_$(PROJECT_NAME).$*
+	@mv 'dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/build_$(PROJECT_NAME).$*' 'dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/$(PROJECT_NAME).$*'
 
 ifneq ($(TARGET_ARCH),)
-dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
+dist/$(PROJECT_NAME)_$(CHANNEL)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
 	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -tags "$(GO_TAGS)" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.MODE=PROD -X github.com/KarpelesLab/goupd.CHANNEL=$(CHANNEL) $(GOLDFLAGS)"
 endif
 
