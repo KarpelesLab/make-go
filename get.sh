@@ -62,6 +62,9 @@ case "$MACHINE_ARCH" in
 	aarch64)
 		GOARCH=arm64
 		;;
+	riscv64)
+		GOARCH=riscv64
+		;;
 	*)
 		echo >&2 "Error: unsupported architecture $MACHINE_ARCH"
 		exit 1
