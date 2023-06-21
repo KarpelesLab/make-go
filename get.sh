@@ -74,7 +74,11 @@ esac
 MACHINE_FULL="${GOOS}_${GOARCH}"
 
 echo "Grabbing version information for $PROJECT..."
-VERSION_INFO=`curl -s -f "https://dist-go.tristandev.net/${PROJECT}/LATEST"`
+if [ x"$CHANNEL" = x ]; then
+	VERSION_INFO="$(curl -s -f "https://dist-go.tristandev.net/${PROJECT}/LATEST")"
+else
+	VERSION_INFO="$(curl -s -f "https://dist-go.tristandev.net/${PROJECT}/LATEST-${CHANNEL}")"
+fi
 CURL_RES=$?
 
 if [ $CURL_RES != 0 ]; then
