@@ -29,7 +29,7 @@ cat >$ROOT"/lib/systemd/system/${PROJECT}.service" <<EOF
 [Unit]
 Description=${PROJECT} daemon
 After=network-online.target
-Wants=network-online.target systemd-networkd-wait-online.service
+Wants=network-online.target
 StartLimitIntervalSec=30
 StartLimitBurst=30
 
